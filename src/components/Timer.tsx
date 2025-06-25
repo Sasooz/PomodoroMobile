@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { View, Text, TextInput, TouchableOpacity, Modal } from "react-native";
 import { globalStyles } from "../styles/globalStyles";
 import { Audio } from "expo-av";
 
@@ -22,6 +22,9 @@ export default function Timer({
   const [secondsLeft, setSecondsLeft] = useState(duration ? duration * 60 : 0);
   const [isPaused, setIsPaused] = useState(false);
   const [hasStarted, setHasStarted] = useState(!!duration);
+  const [showAlarm, setShowAlarm] = useState(false);
+
+  const soundRef = useRef<Audio.Sound | null>(null);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -31,8 +34,7 @@ export default function Timer({
         setSecondsLeft((prev) => {
           if (prev <= 1) {
             clearInterval(interval);
-            playSound();
-            onFinish();
+            triggerAlarm();
             return 0;
           }
           return prev - 1;
@@ -47,11 +49,38 @@ export default function Timer({
     onPauseChange?.(isPaused);
   }, [isPaused]);
 
-  const playSound = async () => {
-    const { sound } = await Audio.Sound.createAsync(
-      require("../../assets/notification.mp3")
-    );
-    await sound.playAsync();
+  const triggerAlarm = async () => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require("../../assets/notification.mp3"),
+        {
+          isLooping: true,
+          shouldPlay: true,
+        }
+      );
+      soundRef.current = sound;
+      setShowAlarm(true);
+    } catch (error) {
+      console.warn("Erro ao tocar som:", error);
+    }
+  };
+
+  const stopAlarmAndReset = async () => {
+    try {
+      if (soundRef.current) {
+        await soundRef.current.stopAsync();
+        await soundRef.current.unloadAsync();
+        soundRef.current = null;
+      }
+    } catch (err) {
+      console.warn("Erro ao parar o som:", err);
+    }
+
+    setShowAlarm(false);
+    setHasStarted(false);
+    setInputMinutes("");
+    setSecondsLeft(0);
+    setIsPaused(false);
   };
 
   const formatTime = (totalSeconds: number) => {
@@ -79,6 +108,7 @@ export default function Timer({
           placeholder="Minutos"
           keyboardType="numeric"
           maxLength={2}
+          placeholderTextColor="#999"
         />
         <TouchableOpacity style={globalStyles.button} onPress={handleStart}>
           <Text style={globalStyles.buttonText}>Começar</Text>
@@ -115,6 +145,20 @@ export default function Timer({
           {isPaused ? "Continuar" : "Pausar"}
         </Text>
       </TouchableOpacity>
+
+      <Modal visible={showAlarm} transparent animationType="slide">
+        <View style={globalStyles.modalContainer}>
+          <View style={globalStyles.modalContent}>
+            <Text style={globalStyles.title}>⏰ Tempo Encerrado!</Text>
+            <TouchableOpacity
+              style={[globalStyles.button, globalStyles.dangerButton]}
+              onPress={stopAlarmAndReset}
+            >
+              <Text style={globalStyles.buttonText}>Desligar Alarme</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

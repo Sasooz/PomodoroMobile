@@ -5,10 +5,10 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import HomeScreen from "./src/screens/HomeScreen";
 import HistoryScreen from "./src/screens/HistoryScreen";
 
-import { RootStackParamList } from "./src/navigation/types";
-import { colors, globalStyles } from "./src/styles/globalStyles";
+import { RootTabParamList } from "./src/navigation/types";
+import { colors } from "./src/styles/globalStyles";
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+const Stack = createNativeStackNavigator<RootTabParamList>();
 
 export default function App() {
   return (

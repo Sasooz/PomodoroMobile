@@ -96,7 +96,6 @@ export default function HistoryScreen() {
           )}
           renderHiddenItem={({ item, index }) => (
             <View style={globalStyles.hiddenButtons}>
-              {/* Editar à direita */}
               <TouchableOpacity
                 style={[
                   globalStyles.hiddenButton,
@@ -110,7 +109,6 @@ export default function HistoryScreen() {
                 <Text style={globalStyles.buttonText}>✏️</Text>
               </TouchableOpacity>
 
-              {/* Excluir à esquerda */}
               <TouchableOpacity
                 style={[
                   globalStyles.hiddenButton,
